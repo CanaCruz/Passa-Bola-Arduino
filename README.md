@@ -1,10 +1,11 @@
 # Passa-Bola-Arduino
-Monitoramento de Saúde (ESP32 + MQTT + Node-RED)
+Passa a Bola — Monitoramento de Saúde (ESP32 + MQTT + Node-RED)
 
-Sistema IoT para acompanhamento em tempo real de sinais vitais de atletas durante uma partida de futebol (conceito/POC).
-O ESP32 lê temperatura (DHT22) e simula BPM e SpO₂ via entradas analógicas, publica os dados em MQTT, e o Node-RED apresenta tudo num dashboard com gauges, gráfico temporal, status e um comando opcional (liga/desliga) via MQTT.
+Sistema IoT para acompanhamento em tempo real de sinais vitais de atletas durante uma partida de futebol (conceito/POC). O ESP32 lê temperatura (DHT22) e simula BPM e SpO₂ via entradas analógicas, publica os dados em MQTT, e o Node-RED apresenta tudo num dashboard com gauges, gráfico temporal, status e um comando opcional (liga/desliga) via MQTT.
 
 ⚠️ Projeto educacional: o hardware usa sensores simulados e não substitui equipamentos médicos.
+
+🔌 MQTT
 
 Broker (padrão): test.mosquitto.org:1883
 Dados: sensor/dht/Arthur
@@ -14,29 +15,30 @@ Comando opcional: led/control/Arthur → '1' / '0'
 Payload:
 {"Temperatura": 31.8, "BPM": 85, "SpO2": 97, "status": "OK", "ts": 123456}
 
+💡 Dica: troque “Arthur” pelo identificador do seu time/jogador (ajuste no ESP32 e no Node-RED).
 
-Dica: troque “Arthur” pelo identificador do seu time/jogador (ajuste ESP32 e Node-RED juntos).
-
-Como rodar (Wokwi)
+▶️ Como rodar (Wokwi)
 Adicione as libs: Adafruit GFX, Adafruit SSD1306, DHT sensor library, PubSubClient.
-Clique Run e permita Internet.
+Clique Run e permita Internet (Allow).
 Se usar outro broker, altere MQTT_HOST no sketch.
 
-Como rodar (Node-RED)
-Instale o dashboard: npm i node-red-dashboard
-Importe node-red/flow.json e configure o nó MQTT com o broker/porta.
+🧭 Como rodar (Node-RED)
+Instale o dashboard:
+npm i node-red-dashboard
+Importe node-red/flow.json e configure o nó MQTT com broker/porta.
 Abra http://localhost:1880/ui: gauges, gráfico e status devem atualizar.
 O switch LED Verde (CMD) publica em led/control/Arthur (se o ESP32 assinar, liga/desliga).
 
-Teste rápido (sem ESP32): Inject → payload JSON abaixo → no JSON parse:
+🧪 Teste rápido (sem ESP32)
+Crie um Inject → payload (string ou json) → conecte ao JSON parse:
 {"Temperatura":31.8,"BPM":85,"SpO2":97,"status":"OK"}
 
-Problemas comuns
-Gráfico vazio: ative “Show dots” no chart ou envie amostras contínuas (1 s).
-Nada chega: verifique broker/porta/tópicos e o nó Debug após mqtt in.
-Offline: confirme “Allow Internet” no Wokwi e hostname do broker.
+🐞 Problemas comuns
+Gráfico vazio: ative Show dots no chart ou envie amostras contínuas (1 s).
+Nada chega: verifique broker/porta/tópicos e o Debug após mqtt in.
+Offline: confirme Allow Internet no Wokwi e hostname do broker.
 
-Desenvolvedores
+👥 Desenvolvedores
 Arthur Canaverde da Cruz — RM:563029
 Lucas Costa Zago — RM:562028
 
