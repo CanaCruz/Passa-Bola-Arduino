@@ -45,6 +45,9 @@ Lucas Costa Zago — RM:562028
 Código de acesso ao projeto no Wokwi:
 https://wokwi.com/projects/442277443782837249
 
+Código de acesso vídeo do youtube:
+https://youtu.be/Doma4EKaZ-8
+
 Código Node-Red:
 
 [
