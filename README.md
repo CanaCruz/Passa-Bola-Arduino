@@ -1,566 +1,77 @@
-# Passa-Bola-Arduino
-Passa a Bola — Monitoramento de Saúde (ESP32 + MQTT + Node-RED)
+⚽ Passa a Bola — Monitoramento de Saúde (ESP32 + MQTT + Node-RED)
 
-Sistema IoT para acompanhamento em tempo real de sinais vitais de atletas durante uma partida de futebol (conceito/POC). O ESP32 lê temperatura (DHT22) e simula BPM e SpO₂ via entradas analógicas, publica os dados em MQTT, e o Node-RED apresenta tudo num dashboard com gauges, gráfico temporal, status e um comando opcional (liga/desliga) via MQTT.
+Sistema IoT desenvolvido como prova de conceito (PoC) para monitorar em tempo real sinais vitais de atletas durante uma partida de futebol.
+O projeto conecta um ESP32 a sensores simulados de temperatura (DHT22), frequência cardíaca (BPM) e oxigenação sanguínea (SpO₂).
+Os dados são enviados via MQTT para o Node-RED, que exibe um dashboard web com gauges, gráfico temporal e status automático (OK / ALERTA / CRÍTICO).
+O sistema também permite o envio de comandos do dashboard para o hardware, como acionar o LED verde via MQTT.
 
-⚠️ Projeto educacional: o hardware usa sensores simulados e não substitui equipamentos médicos.
+👥 Integrantes
 
-🔌 MQTT
+Arthur Canaverde da Cruz — RM: 563029
+Lucas Costa Zago — RM: 562028
 
-Broker (padrão): test.mosquitto.org:1883
-Dados: sensor/dht/Arthur
-Status (LWT): sensor/dht/status/Arthur → online (retained) / offline
-Comando opcional: led/control/Arthur → '1' / '0'
+⚙️ Detalhes da Implementação
+Microcontrolador: ESP32 DevKit V1
+Sensores: DHT22 (temperatura/umidade) + simulação de BPM e SpO₂ em pinos analógicos
+Comunicação: MQTT (test.mosquitto.org:1883)
+Dashboard: Node-RED + node-red-dashboard
+Tópicos MQTT
+sensor/dht/Arthur → envio de dados JSON {Temperatura, BPM, SpO2, status, ts}
+sensor/dht/status/Arthur → status online/offline (LWT)
+led/control/Arthur → controle remoto de LED (1 = liga / 0 = desliga)
 
-Payload:
-{"Temperatura": 31.8, "BPM": 85, "SpO2": 97, "status": "OK", "ts": 123456}
+🧪 Resultados da PoC
+Durante os testes:
+O dashboard exibiu atualização em tempo real dos sinais vitais enviados pelo ESP32.
+O status alterava automaticamente conforme limites fisiológicos:
+OK → dentro da faixa normal
+ALERTA → leve desvio
+CRÍTICO → valor extremo ou perda de sinal
+O comando LED funcionou corretamente via Node-RED, acionando o pino digital correspondente.
+O sistema manteve conexão estável com o broker público Mosquitto.
 
-💡 Dica: troque “Arthur” pelo identificador do seu time/jogador (ajuste no ESP32 e no Node-RED).
+🌐 Integração IoT com o Site
+A PoC também simulou a integração do dashboard com o site Passa a Bola, onde os dados poderiam ser exibidos no painel dos atletas em tempo real (via MQTT WebSocket ou API).
+Prints de integração demonstram a comunicação entre o ESP32 → Broker MQTT → Node-RED → Interface Web.
+Fluxo	Print
+Dashboard Node-RED com gauges e gráfico	
+Conexão MQTT ativa	
+LED controlado via dashboard	
+▶️ Como Executar
+No Wokwi
+Adicione as libs: Adafruit GFX, Adafruit SSD1306, DHT sensor library, PubSubClient
+Clique em Run e permita Internet
+Alterar MQTT_HOST no sketch, se usar outro broker
 
-▶️ Como rodar (Wokwi)
-Adicione as libs: Adafruit GFX, Adafruit SSD1306, DHT sensor library, PubSubClient.
-Clique Run e permita Internet (Allow).
-Se usar outro broker, altere MQTT_HOST no sketch.
-
-🧭 Como rodar (Node-RED)
+🔗 Projeto Wokwi:
+https://wokwi.com/projects/442277443782837249
+No Node-RED
 Instale o dashboard:
 npm i node-red-dashboard
-Importe node-red/flow.json e configure o nó MQTT com broker/porta.
-Abra http://localhost:1880/ui: gauges, gráfico e status devem atualizar.
-O switch LED Verde (CMD) publica em led/control/Arthur (se o ESP32 assinar, liga/desliga).
+Importe o arquivo node-red/flow.json
+Configure o nó MQTT com o broker e porta
+Acesse http://localhost:1880/ui
 
-🧪 Teste rápido (sem ESP32)
-Crie um Inject → payload (string ou json) → conecte ao JSON parse:
-{"Temperatura":31.8,"BPM":85,"SpO2":97,"status":"OK"}
+🎥 Demonstração em Vídeo
+🔗 YouTube: https://youtu.be/Doma4EKaZ-8
 
-🐞 Problemas comuns
-Gráfico vazio: ative Show dots no chart ou envie amostras contínuas (1 s).
-Nada chega: verifique broker/porta/tópicos e o Debug após mqtt in.
-Offline: confirme Allow Internet no Wokwi e hostname do broker.
+🧩 Estrutura de Pastas e Replicabilidade
+Passa-Bola-Arduino/
+├── esp32_passabola.ino          # Código do microcontrolador (Arduino IDE)
+├── node-red/
+│   └── flow.json                # Fluxo completo do Node-RED
+├── prints/                      # Evidências e capturas de tela
+│   ├── dashboard.png
+│   ├── mqtt.png
+│   └── led.png
+├── README.md                    # Documentação do projeto
+└── docs/
+    └── guia_execucao.md         # Passo a passo detalhado de instalação
 
-👥 Desenvolvedores
-Arthur Canaverde da Cruz — RM:563029
-Lucas Costa Zago — RM:562028
 
-Código de acesso ao projeto no Wokwi:
-https://wokwi.com/projects/442277443782837249
+🔁 Replicabilidade:
+Basta clonar o repositório, importar o fluxo Node-RED, e rodar o sketch do ESP32 no Wokwi ou Arduino IDE. O sistema reconecta automaticamente ao broker MQTT e reproduz o mesmo comportamento da PoC.
 
-Código de acesso vídeo do youtube:
-https://youtu.be/Doma4EKaZ-8
-
-Código Node-Red:
-
-[
-    {
-        "id": "flow_passabola",
-        "type": "tab",
-        "label": "Passa a Bola",
-        "disabled": false,
-        "info": ""
-    },
-    {
-        "id": "mqtt_in_data",
-        "type": "mqtt in",
-        "z": "flow_passabola",
-        "name": "DHT Data",
-        "topic": "sensor/dht/Arthur",
-        "qos": "0",
-        "datatype": "auto",
-        "broker": "mqtt_broker_mosq",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 120,
-        "y": 140,
-        "wires": [
-            [
-                "json_parse",
-                "dbg_raw"
-            ]
-        ]
-    },
-    {
-        "id": "json_parse",
-        "type": "json",
-        "z": "flow_passabola",
-        "name": "JSON parse",
-        "property": "payload",
-        "action": "",
-        "pretty": false,
-        "x": 330,
-        "y": 140,
-        "wires": [
-            [
-                "chg_temp",
-                "chg_bpm",
-                "chg_spo2",
-                "fn_status",
-                "91c544df461b4914"
-            ]
-        ]
-    },
-    {
-        "id": "chg_temp",
-        "type": "change",
-        "z": "flow_passabola",
-        "name": "→ Temp",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "payload.Temperatura",
-                "tot": "jsonata"
-            },
-            {
-                "t": "set",
-                "p": "topic",
-                "pt": "msg",
-                "to": "Temperatura",
-                "tot": "str"
-            }
-        ],
-        "x": 540,
-        "y": 80,
-        "wires": [
-            [
-                "g_temp",
-                "chart_all"
-            ]
-        ]
-    },
-    {
-        "id": "chg_bpm",
-        "type": "change",
-        "z": "flow_passabola",
-        "name": "→ BPM",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "payload.BPM",
-                "tot": "jsonata"
-            },
-            {
-                "t": "set",
-                "p": "topic",
-                "pt": "msg",
-                "to": "BPM",
-                "tot": "str"
-            }
-        ],
-        "x": 540,
-        "y": 120,
-        "wires": [
-            [
-                "g_bpm",
-                "chart_all"
-            ]
-        ]
-    },
-    {
-        "id": "chg_spo2",
-        "type": "change",
-        "z": "flow_passabola",
-        "name": "→ SpO2",
-        "rules": [
-            {
-                "t": "set",
-                "p": "payload",
-                "pt": "msg",
-                "to": "payload.SpO2",
-                "tot": "jsonata"
-            },
-            {
-                "t": "set",
-                "p": "topic",
-                "pt": "msg",
-                "to": "SpO2",
-                "tot": "str"
-            }
-        ],
-        "x": 540,
-        "y": 160,
-        "wires": [
-            [
-                "g_spo2",
-                "chart_all"
-            ]
-        ]
-    },
-    {
-        "id": "fn_status",
-        "type": "function",
-        "z": "flow_passabola",
-        "name": "Avalia STATUS",
-        "func": "// Espera payload: {Temperatura,BPM,SpO2,status}\nvar t = Number(msg.payload.Temperatura);\nvar bpm = Number(msg.payload.BPM);\nvar s = Number(msg.payload.SpO2);\n\nlet status = msg.payload.status || 'OK'; // o ESP já manda, mas garantimos\n\n// Recalcula localmente (opcional)\nfunction nivelTemp(x){ if(isNaN(x)) return 1; if(x>38.5) return 2; if(x>37.5) return 1; return 0; }\nfunction nivelBpm(x){ if(x>150||x<40) return 2; if(x>140||x<50) return 1; if(x>=60&&x<=100) return 0; return 1; }\nfunction nivelSpO2(x){ if(x<90) return 2; if(x<=94) return 1; return 0; }\n\nconst nivel = Math.max(nivelTemp(t), Math.max(nivelBpm(bpm), nivelSpO2(s)));\nif(nivel===0) status = 'OK';\nelse if(nivel===1) status = 'ALERTA';\nelse status = 'CRITICO';\n\nreturn { payload: status };",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 560,
-        "y": 200,
-        "wires": [
-            [
-                "txt_status"
-            ]
-        ]
-    },
-    {
-        "id": "g_temp",
-        "type": "ui_gauge",
-        "z": "flow_passabola",
-        "name": "Temperatura (°C)",
-        "group": "ui_group_saude",
-        "order": 1,
-        "width": "4",
-        "height": "4",
-        "gtype": "gage",
-        "title": "Temperatura (°C)",
-        "label": "°C",
-        "format": "{{value}}",
-        "min": 34,
-        "max": 41,
-        "colors": [
-            "#3acc3a",
-            "#ffc107",
-            "#ca3838"
-        ],
-        "seg1": "37.5",
-        "seg2": "38.5",
-        "className": "",
-        "x": 950,
-        "y": 160,
-        "wires": []
-    },
-    {
-        "id": "g_bpm",
-        "type": "ui_gauge",
-        "z": "flow_passabola",
-        "name": "BPM",
-        "group": "ui_group_saude",
-        "order": 2,
-        "width": "4",
-        "height": "4",
-        "gtype": "gage",
-        "title": "Batimentos (BPM)",
-        "label": "BPM",
-        "format": "{{value}}",
-        "min": 40,
-        "max": 180,
-        "colors": [
-            "#3acc3a",
-            "#ffc107",
-            "#ea1a1a"
-        ],
-        "seg1": "50",
-        "seg2": "140",
-        "diff": false,
-        "className": "",
-        "x": 910,
-        "y": 100,
-        "wires": []
-    },
-    {
-        "id": "g_spo2",
-        "type": "ui_gauge",
-        "z": "flow_passabola",
-        "name": "SpO₂",
-        "group": "ui_group_saude",
-        "order": 3,
-        "width": "4",
-        "height": "4",
-        "gtype": "gage",
-        "title": "Oxigenação (SpO₂)",
-        "label": "%",
-        "format": "{{value}}",
-        "min": 80,
-        "max": 100,
-        "colors": [
-            "#ca3838",
-            "#ffc107",
-            "#3acc3a"
-        ],
-        "seg1": "90",
-        "seg2": "94",
-        "diff": false,
-        "className": "",
-        "x": 910,
-        "y": 40,
-        "wires": []
-    },
-    {
-        "id": "chart_all",
-        "type": "ui_chart",
-        "z": "flow_passabola",
-        "name": "Sinais (Tempo)",
-        "group": "ui_group_saude",
-        "order": 5,
-        "width": "12",
-        "height": "6",
-        "label": "Temperatura / BPM / SpO₂",
-        "chartType": "horizontalBar",
-        "legend": "true",
-        "xformat": "HH:mm:ss",
-        "interpolate": "linear",
-        "nodata": "",
-        "dot": true,
-        "ymin": "0",
-        "ymax": "",
-        "removeOlder": "5",
-        "removeOlderPoints": "",
-        "removeOlderUnit": "minute",
-        "cutout": 0,
-        "useOneColor": false,
-        "useUTC": false,
-        "colors": [
-            "#1f77b4",
-            "#ff7f0e",
-            "#2ca02c",
-            "#d62728",
-            "#9467bd",
-            "#8c564b",
-            "#e377c2",
-            "#7f7f7f",
-            "#bcbd22"
-        ],
-        "outputs": 1,
-        "useDifferentColor": false,
-        "className": "",
-        "x": 940,
-        "y": 220,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "mqtt_in_status",
-        "type": "mqtt in",
-        "z": "flow_passabola",
-        "name": "Status (LWT)",
-        "topic": "sensor/dht/status/Arthur",
-        "qos": "0",
-        "datatype": "auto",
-        "broker": "mqtt_broker_mosq",
-        "nl": false,
-        "rap": true,
-        "rh": 0,
-        "inputs": 0,
-        "x": 130,
-        "y": 340,
-        "wires": [
-            [
-                "txt_conn"
-            ]
-        ]
-    },
-    {
-        "id": "txt_conn",
-        "type": "ui_text",
-        "z": "flow_passabola",
-        "group": "ui_group_saude",
-        "order": 0,
-        "width": "12",
-        "height": "1",
-        "name": "Dispositivo",
-        "label": "Dispositivo",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "className": "",
-        "style": false,
-        "font": "",
-        "fontSize": "",
-        "color": "#000000",
-        "x": 930,
-        "y": 340,
-        "wires": []
-    },
-    {
-        "id": "ui_switch_led",
-        "type": "ui_switch",
-        "z": "flow_passabola",
-        "name": "LED Verde (CMD) ",
-        "label": "LED Verde (CMD) ",
-        "tooltip": "",
-        "group": "ui_group_saude",
-        "order": 6,
-        "width": "4",
-        "height": "1",
-        "passthru": true,
-        "decouple": "false",
-        "topic": "",
-        "topicType": "str",
-        "style": "",
-        "onvalue": "1",
-        "onvalueType": "str",
-        "onicon": "",
-        "oncolor": "",
-        "offvalue": "0",
-        "offvalueType": "str",
-        "officon": "",
-        "offcolor": "",
-        "animate": false,
-        "className": "",
-        "x": 130,
-        "y": 420,
-        "wires": [
-            [
-                "mqtt_out_cmd"
-            ]
-        ]
-    },
-    {
-        "id": "mqtt_out_cmd",
-        "type": "mqtt out",
-        "z": "flow_passabola",
-        "name": "CMD LED ",
-        "topic": "led/control/Arthur",
-        "qos": "",
-        "retain": "",
-        "respTopic": "",
-        "contentType": "",
-        "userProps": "",
-        "correl": "",
-        "expiry": "",
-        "broker": "mqtt_broker_mosq",
-        "x": 420,
-        "y": 420,
-        "wires": []
-    },
-    {
-        "id": "dbg_raw",
-        "type": "debug",
-        "z": "flow_passabola",
-        "name": "DEBUG raw",
-        "active": true,
-        "tosidebar": true,
-        "console": false,
-        "tostatus": false,
-        "complete": "payload",
-        "targetType": "msg",
-        "statusVal": "",
-        "statusType": "auto",
-        "x": 330,
-        "y": 100,
-        "wires": []
-    },
-    {
-        "id": "txt_status",
-        "type": "ui_text",
-        "z": "flow_passabola",
-        "group": "ui_group_saude",
-        "order": 4,
-        "width": "12",
-        "height": "1",
-        "name": "STATUS",
-        "label": "STATUS",
-        "format": "{{msg.payload}}",
-        "layout": "row-spread",
-        "className": "",
-        "style": false,
-        "font": "",
-        "fontSize": "",
-        "color": "#000000",
-        "x": 920,
-        "y": 280,
-        "wires": []
-    },
-    {
-        "id": "91c544df461b4914",
-        "type": "function",
-        "z": "flow_passabola",
-        "name": "Para Chart (3 séries)",
-        "func": "const t   = Number(msg.payload.Temperatura ?? msg.payload.temperatura);\nconst bpm = Number(msg.payload.BPM         ?? msg.payload.bpm);\nconst s   = Number(msg.payload.SpO2        ?? msg.payload.spo2);\nif (isNaN(t) || isNaN(bpm) || isNaN(s)) return null;\nreturn [\n  { topic: 'Temperatura', payload: t },\n  { topic: 'BPM',         payload: bpm },\n  { topic: 'SpO2',        payload: s }\n];\n",
-        "outputs": 1,
-        "timeout": "",
-        "noerr": 0,
-        "initialize": "",
-        "finalize": "",
-        "libs": [],
-        "x": 580,
-        "y": 240,
-        "wires": [
-            [
-                "chart_all"
-            ]
-        ]
-    },
-    {
-        "id": "d03a8133812cf32c",
-        "type": "inject",
-        "z": "flow_passabola",
-        "name": "Inject de teste",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "{\"Temperatura\":31.8,\"BPM\":85,\"SpO2\":97,\"status\":\"OK\"}",
-        "payloadType": "str",
-        "x": 130,
-        "y": 220,
-        "wires": [
-            [
-                "json_parse"
-            ]
-        ]
-    },
-    {
-        "id": "mqtt_broker_mosq",
-        "type": "mqtt-broker",
-        "name": "Mosquitto Public",
-        "broker": "test.mosquitto.org",
-        "port": "1883",
-        "clientid": "",
-        "usetls": false,
-        "protocolVersion": "4",
-        "keepalive": "60",
-        "cleansession": true,
-        "birthTopic": "",
-        "birthQos": "0",
-        "birthPayload": "",
-        "closeTopic": "",
-        "closePayload": "",
-        "willTopic": "",
-        "willQos": "0",
-        "willPayload": ""
-    },
-    {
-        "id": "ui_group_saude",
-        "type": "ui_group",
-        "name": "Saúde em Tempo Real",
-        "tab": "ui_tab_passabola",
-        "order": 1,
-        "disp": true,
-        "width": "12",
-        "collapse": false
-    },
-    {
-        "id": "ui_tab_passabola",
-        "type": "ui_tab",
-        "name": "Passa a Bola",
-        "icon": "dashboard",
-        "order": 1
-    },
-    {
-        "id": "a1a4c76c4e8a815e",
-        "type": "global-config",
-        "env": [],
-        "modules": {
-            "node-red-dashboard": "3.6.6"
-        }
-    }
-]
+⚠️ Aviso
+Projeto educacional, com sensores simulados.
+Não se destina ao uso médico.
